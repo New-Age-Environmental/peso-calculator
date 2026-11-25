@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Pesos">
+<title>Peso Calculator</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="theme-color" content="#74acdf">
+<style>
+/* VOICE: quick, friendly, a tool you use standing at a counter.
+   IDEA: the Argentine flag band, celeste and white with the gold sun.
+   PICTURE: the live result, huge, in the celeste band.
+   COLOUR and TYPE: celeste #74acdf, white, sun gold #f6b40e; Archivo.
+   LAYOUT: one column, result on top, controls below, big targets. */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#0e1a26);--ink:light-dark(#10202e,#eef5fb);--soft:light-dark(#5a6b7a,#a9bccc);--cel:light-dark(#74acdf,#2c5a83);--celdk:light-dark(#3f7fb8,#9cc8ee);--panel:light-dark(#eef5fb,#16283a);--line:light-dark(#cfe0ef,#2a4258);--sun:#f6b40e}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Archivo,system-ui,-apple-system,sans-serif;overflow-x:clip}
+.wrap{max-width:560px;margin:0 auto}
+.hero{background:var(--cel);color:#fff;padding:20px max(5vw,16px) 24px;position:relative;overflow:hidden}
+.sun{position:absolute;right:-30px;top:-30px;width:130px;height:130px;opacity:.9}
+h1{margin:0 0 4px;font-size:15px;font-weight:600;letter-spacing:0;opacity:.95}
+.big{font-size:clamp(40px,13vw,64px);font-weight:800;line-height:1.05;white-space:nowrap;position:relative}
+.sub{font-size:16px;opacity:.95;position:relative}
+.band{padding:18px max(5vw,16px)}
+label,.lab{display:block;font-size:14px;font-weight:600;color:var(--soft);margin:0 0 6px}
+input{font:inherit;font-size:28px;font-weight:600;width:100%;padding:12px 14px;border:2px solid var(--line);border-radius:12px;background:var(--panel);color:var(--ink)}
+input:focus{outline:3px solid var(--sun);outline-offset:1px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+button{font:inherit;font-weight:600;font-size:16px;min-height:48px;padding:10px 14px;border-radius:12px;border:2px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+button[aria-pressed=true]{background:var(--celdk);border-color:var(--celdk);color:light-dark(#fff,#0e1a26)}
+button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.chips{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.chips button{text-align:left;line-height:1.25}
+.chips small{display:block;font-weight:400;font-size:13px;color:inherit;opacity:.85}
+.rate{display:flex;align-items:center;gap:10px;margin-top:10px}
+.rate input{font-size:22px;padding:10px 12px}
+.rate span{font-size:15px;color:var(--soft);white-space:nowrap}
+.card{background:var(--panel);border-radius:14px;padding:14px}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.num{font-size:24px;font-weight:800;white-space:nowrap}
+.mini{font-size:14px;color:var(--soft)}
+.step{display:flex;align-items:center;gap:10px}
+.step button{width:52px;font-size:24px;padding:0}
+.step output{font-size:28px;font-weight:800;min-width:2ch;text-align:center}
+table{width:100%;border-collapse:collapse;font-size:17px}
+td{padding:9px 4px;border-bottom:1px solid var(--line);white-space:nowrap}
+td:last-child{text-align:right;font-weight:600}
+details{border-top:1px solid var(--line);padding:12px 0}
+summary{font-weight:600;cursor:pointer;min-height:44px;display:flex;align-items:center}
+.note{font-size:15px;color:var(--soft)}
+.note b{color:var(--ink)}
+@media (prefers-reduced-motion:no-preference){.big{transition:opacity .15s}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<section class="hero" aria-live="polite">
+  <svg class="sun" viewBox="0 0 100 100" aria-hidden="true"><g fill="#f6b40e"><circle cx="50" cy="50" r="18"/><g id="r"><path d="M48 4h4l-2 22z"/></g><use href="#r" transform="rotate(30 50 50)"/><use href="#r" transform="rotate(60 50 50)"/><use href="#r" transform="rotate(90 50 50)"/><use href="#r" transform="rotate(120 50 50)"/><use href="#r" transform="rotate(150 50 50)"/><use href="#r" transform="rotate(180 50 50)"/><use href="#r" transform="rotate(210 50 50)"/><use href="#r" transform="rotate(240 50 50)"/><use href="#r" transform="rotate(270 50 50)"/><use href="#r" transform="rotate(300 50 50)"/><use href="#r" transform="rotate(330 50 50)"/></g></svg>
+  <h1 id="lead">Pesos to dollars</h1>
+  <div class="big" id="res">$0.00</div>
+  <div class="sub" id="resSub">at 1 USD = 1,667 pesos</div>
+</section>
+
+<section class="band">
+  <div class="seg" role="group" aria-label="Direction">
+    <button id="dA" aria-pressed="true">Pesos → Dollars</button>
+    <button id="dB" aria-pressed="false">Dollars → Pesos</button>
+  </div>
+  <div style="margin-top:14px">
+    <label for="amt" id="amtLab">Amount in pesos</label>
+    <input id="amt" inputmode="decimal" autocomplete="off" placeholder="0">
+  </div>
+</section>
+
+<section class="band" style="padding-top:0">
+  <span class="lab">Rate you are getting</span>
+  <div class="chips" role="group" aria-label="Rate presets">
+    <button data-k="card">Paying by US card<small>about 1,667</small></button>
+    <button data-k="cash">Cash at a cambio<small>about 1,705</small></button>
+    <button data-k="bank">Bank exchange<small>about 1,581</small></button>
+    <button data-k="custom">My own rate<small id="customSmall">tap, then type it</small></button>
+  </div>
+  <div class="rate"><input id="rate" inputmode="decimal" aria-label="Pesos per dollar"><span>pesos per 1 USD</span></div>
+  <p class="note" id="rateNote"></p>
+</section>
+
+<section class="band" style="padding-top:0">
+  <span class="lab">Tip (propina) and split</span>
+  <div class="row" role="group" aria-label="Tip">
+    <button data-t="0">None</button><button data-t="10">10%</button><button data-t="15">15%</button><button data-t="20">20%</button>
+  </div>
+  <div class="step" style="margin-top:12px">
+    <button id="pm" aria-label="One fewer person">−</button><output id="ppl">5</output><button id="pp" aria-label="One more person">+</button><span class="mini">people splitting</span>
+  </div>
+  <div class="card" style="margin-top:12px">
+    <div class="split">
+      <div><div class="mini">Total with tip</div><div class="num" id="totP">0</div><div class="mini" id="totU">$0.00</div></div>
+      <div><div class="mini">Each person pays</div><div class="num" id="perP">0</div><div class="mini" id="perU">$0.00</div></div>
+    </div>
+    <p class="mini" style="margin:10px 0 0" id="tipLine">Tip: 0 pesos</p>
+  </div>
+</section>
+
+<section class="band" style="padding-top:0">
+  <span class="lab">Quick price check at this rate</span>
+  <table><tbody id="quick"></tbody></table>
+</section>
+
+<section class="band" style="padding-top:0">
+  <details>
+    <summary>What each rate means</summary>
+    <p class="note"><b>Paying by US card.</b> Visa and Mastercard cards issued outside Argentina are usually converted near the "MEP" dollar, a legal market rate set by trading bonds. Your card statement shows the exact rate later.</p>
+    <p class="note"><b>Cash at a cambio.</b> What an exchange house or "cueva" pays you for US cash, the buy side of the informal "blue" dollar. Clean, newer $100 bills usually get the best rate.</p>
+    <p class="note"><b>Bank exchange.</b> What Banco Nación pays for dollars at the official rate. Lowest of the three, so pesos cost you more this way.</p>
+    <p class="note"><b>The "dólar tarjeta" (about 2,119)</b> you may see quoted is the official rate plus a 30% tax charge on cards issued in Argentina. It does not apply to a US card.</p>
+    <p class="note"><b>Tip.</b> About 10% is the custom in bars and restaurants, more for great service. A "cubierto" (table charge) on the bill is not the tip.</p>
+    <p class="note">Preset rates read on 25 Nov 2026, Buenos Aires afternoon, from La Nación and Ámbito. Rates move daily, so type today's number in "My own rate" when it changes. Your rate and tip are remembered on this phone. Works with no signal once it has been opened one time.</p>
+  </details>
+</section>
+</div>
+
+<script>
+{
+const P={card:1667,cash:1705,bank:1581};
+const NOTES={card:'US Visa or Mastercard, near the MEP rate.',cash:'US cash bills sold at an exchange house.',bank:'Official rate at Banco Nación.',custom:'Your own rate, saved on this phone.'};
+const $=id=>document.getElementById(id);
+const store={get(k,d){try{const v=localStorage.getItem('arcalc_'+k);return v===null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('arcalc_'+k,JSON.stringify(v))}catch(e){}}};
+let s={dir:store.get('dir','a'),k:store.get('k','card'),custom:store.get('custom',1700),tip:store.get('tip',10),ppl:store.get('ppl',5)};
+const fP=n=>Math.round(n).toLocaleString('en-US');
+const fU=n=>'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const num=v=>{const x=parseFloat(String(v).replace(/,/g,'').replace(/\s/g,''));return isFinite(x)?x:0};
+const rate=()=>s.k==='custom'?s.custom:P[s.k];
+function render(){
+  const r=rate()||1, a=num($('amt').value);
+  const pesos=s.dir==='a'?a:a*r, usd=pesos/r;
+  $('dA').setAttribute('aria-pressed',s.dir==='a');$('dB').setAttribute('aria-pressed',s.dir==='b');
+  $('lead').textContent=s.dir==='a'?'Pesos to dollars':'Dollars to pesos';
+  $('amtLab').textContent=s.dir==='a'?'Amount in pesos':'Amount in US dollars';
+  $('res').textContent=s.dir==='a'?fU(usd):fP(pesos)+' ARS';
+  $('resSub').textContent=(s.dir==='a'?fP(pesos)+' pesos':fU(a))+' at 1 USD = '+fP(r)+' pesos';
+  document.querySelectorAll('[data-k]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===s.k));
+  $('customSmall').textContent=s.k==='custom'||s.custom?fP(s.custom):'tap, then type it';
+  if(document.activeElement!==$('rate'))$('rate').value=fP(r);
+  $('rateNote').textContent=NOTES[s.k];
+  document.querySelectorAll('[data-t]').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.t===s.tip));
+  $('ppl').textContent=s.ppl;
+  const tipP=pesos*s.tip/100, tot=pesos+tipP, per=tot/s.ppl;
+  $('totP').textContent=fP(tot)+' ARS';$('totU').textContent=fU(tot/r);
+  $('perP').textContent=fP(per)+' ARS';$('perU').textContent=fU(per/r);
+  $('tipLine').textContent='Tip: '+fP(tipP)+' pesos ('+fU(tipP/r)+') at '+s.tip+'%';
+  $('quick').innerHTML=[1000,5000,10000,20000,50000,100000].map(p=>'<tr><td>'+fP(p)+' pesos</td><td>'+fU(p/r)+'</td></tr>').join('');
+}
+$('amt').addEventListener('input',render);
+$('dA').onclick=()=>{s.dir='a';store.set('dir','a');render()};
+$('dB').onclick=()=>{s.dir='b';store.set('dir','b');render()};
+document.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{s.k=b.dataset.k;store.set('k',s.k);render();if(s.k==='custom'){$('rate').focus();$('rate').select()}});
+$('rate').addEventListener('input',()=>{const v=num($('rate').value);if(v>0){s.k='custom';s.custom=v;store.set('k','custom');store.set('custom',v);const keep=$('rate').value;render();$('rate').value=keep}});
+$('rate').addEventListener('blur',render);
+document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{s.tip=+b.dataset.t;store.set('tip',s.tip);render()});
+$('pm').onclick=()=>{s.ppl=Math.max(1,s.ppl-1);store.set('ppl',s.ppl);render()};
+$('pp').onclick=()=>{s.ppl=Math.min(20,s.ppl+1);store.set('ppl',s.ppl);render()};
+render();
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{})}
+}
+</script>
+</body>
+</html>
